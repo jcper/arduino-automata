@@ -32,10 +32,18 @@ IPAddress ip(192, 168, 0, 177);
 // with the IP address and port of the server
 // that you want to connect to (port 80 is default for HTTP):
 EthernetClient client;
-
+const int buttonPin = 2;     // the number of the pushbutton pin
+const int ledPin =  13;      // the number of the LED pin
+// variables will change:
+int buttonState = 0;         // variable for reading the pushbutton status
+int estado =0;
 void setup() {
   // Open serial communications and wait for port to open:
   Serial.begin(9600);
+  // initialize the LED pin as an output:
+  pinMode(ledPin, OUTPUT);
+  // initialize the pushbutton pin as an input:
+  pinMode(buttonPin, INPUT);
   while (!Serial) {
     ; // wait for serial port to connect. Needed for native USB port only
   }
@@ -51,20 +59,43 @@ void setup() {
   Serial.println("connecting...");
 
   // if you get a connection, report back via serial:
+
+ 
   if (client.connect(server, 80)) {
     Serial.println("connected");
-    // Make a HTTP request:
-    client.println("GET /test?led=2 HTTP/1.1");
-    client.println("Host: protected-anchorage-54868.herokuapp.com");
-    client.println("Connection: close");
-    client.println();
   } else {
     // if you didn't get a connection to the server:
     Serial.println("connection failed");
-  }
+   }
+  
 }
 
 void loop() {
+  // read the state of the pushbutton value:
+  buttonState = digitalRead(buttonPin);
+
+  // check if the pushbutton is pressed. If it is, the buttonState is HIGH:
+  if (buttonState == HIGH) {
+    if (estado==1) {
+      Ethernet.begin(mac, ip);
+      delay(1000);
+    client.connect(server, 80);
+     
+
+     Serial.println("connecting...");
+     }
+    
+    // Make a HTTP request:
+    client.println("GET /test?led=ON HTTP/1.1");
+    client.println("Host: protected-anchorage-54868.herokuapp.com");
+    client.println("Connection: close");
+    client.println();
+    // turn LED on:
+    digitalWrite(ledPin, HIGH);
+  } else {
+    // turn LED off:
+    digitalWrite(ledPin, LOW);
+  }
   // if there are incoming bytes available
   // from the server, read them and print them:
   if (client.available()) {
@@ -72,12 +103,16 @@ void loop() {
     Serial.print(c);
   }
 
+  
+
   // if the server's disconnected, stop the client:
   if (!client.connected()) {
     Serial.println();
     Serial.println("disconnecting.");
+    estado=1;
+    Serial.print(estado);
     client.stop();
-
+   
     // do nothing forevermore:
     while (true);
   }
