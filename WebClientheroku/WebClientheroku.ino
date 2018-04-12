@@ -41,11 +41,11 @@ const int ledPin =  7;      // the number of the LED pin
 const int S0=5;
 String cabeceraGet="GET /test?";
 String id="mac=";
-String estat="?estado=";
-String entrada="?entrada=";
-String rele="?salida=";
-String temperatura="?temp=";
-String humedad="?hum=";
+String estat="&estado=";
+String entrada="&entrada=";
+String rele="&salida=";
+String temperatura="&temp=";
+String humedad="&hum=";
 String final=" HTTP/1.1"; 
 String envio;
 String ID="DE:AD:BE:EF:FE:ED";//direccion del dispositivo
@@ -116,7 +116,7 @@ void loop() {
   // from the server, read them and print them:
   if (client.available()) {
     char c = client.read();
-    Serial.print(c);
+    Serial.println(c);
   }
   // if ten seconds have passed since your last connection,
   // then connect again and send data:
