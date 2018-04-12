@@ -48,7 +48,7 @@ String temperatura="?temp=";
 String humedad="?hum=";
 String final=" HTTP/1.1"; 
 String envio;
-
+String ID="DE:AD:BE:EF:FE:ED";//direccion del dispositivo
 // variables will change:
 int buttonState = 0;         // variable for reading the pushbutton status
 int estado= 0;
@@ -92,6 +92,7 @@ void setup() {
     // print the Ethernet board/shield's IP address:
   Serial.print("My IP address: ");
   Serial.println(Ethernet.localIP());
+   
  }
 
 void loop() {
@@ -99,7 +100,7 @@ void loop() {
   buttonState = digitalRead(buttonPin);
   float h = dht.readHumidity(); //se lee la humedad
   float t= dht.readTemperature(); // se lee la temperatura
-  envio=cabeceraGet+id+char(mac)+estat+comunicacion+entrada+estado+rele+salida+temperatura+t+humedad+h+final;
+  envio=cabeceraGet+id+ID+estat+comunicacion+entrada+estado+rele+salida+temperatura+t+humedad+h+final;
   
   // check if the pushbutton is pressed. If it is, the buttonState is HIGH:
   if (buttonState == HIGH) {
