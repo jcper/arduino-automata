@@ -56,7 +56,9 @@ int comunicacion=0;
 int salida=0;//variable rele
 unsigned long lastConnectionTime = 0;             // last time you connected to the server, in milliseconds
 const unsigned long postingInterval = 10L * 1000L; // delay between updates, in milliseconds
-// the "L" is needed to use long type numbers
+// 
+String mensaje="";
+bool recibido=true;
 
 struct tipo_automata{
  byte mac;
@@ -64,12 +66,15 @@ struct tipo_automata{
  int entrada;
  int salida;
  int analogico;
+ int envio=0;
 }automata;
-
+long tiempoUltimaLectura=0;
+float h,t;
 void setup() {
     pinMode(ledPin, OUTPUT);
     pinMode(buttonPin, INPUT);
     envio=String();
+    
     dht.begin(); //Se inicia el sensor
     
     
@@ -98,14 +103,19 @@ void setup() {
 void loop() {
   // read the state of the pushbutton value:
   buttonState = digitalRead(buttonPin);
-  float h = dht.readHumidity(); //se lee la humedad
-  float t= dht.readTemperature(); // se lee la temperatura
+
+  if(millis()-tiempoUltimaLectura>2000){    
+   h = dht.readHumidity(); //se lee la humedad
+   t= dht.readTemperature(); // se lee la temperatura
+  tiempoUltimaLectura=millis(); //actualizamos el tiempo de la última lectura
+  }
   envio=cabeceraGet+id+ID+estat+comunicacion+entrada+estado+rele+salida+temperatura+t+humedad+h+final;
   
   // check if the pushbutton is pressed. If it is, the buttonState is HIGH:
   if (buttonState == HIGH) {
      digitalWrite(ledPin, HIGH);
         estado=1;
+        delay(1000);
         Serial.print(estado);
         } else {
     // turn LED off:
@@ -114,15 +124,20 @@ void loop() {
  
   // if there are incoming bytes available
   // from the server, read them and print them:
+  
   if (client.available()) {
-    char c = client.read();
-    Serial.println(c);
-  }
+    char c = client.read();//Leer 1 carácter
+    mensaje=mensaje+c;
+     Serial.print(c);
+    }
+    
+  
   // if ten seconds have passed since your last connection,
   // then connect again and send data:
+ 
   if (millis() - lastConnectionTime > postingInterval) {
     httpRequest();
-  }
+    }
 }
 
 // this method makes a HTTP connection to the server:
@@ -133,7 +148,7 @@ void httpRequest() {
 
   // if there's a successful connection:
   if (client.connect(server, 80)) {
-    Serial.println("connecting...");
+    //Serial.println("connecting...");
     // send the HTTP GET request:
      
      comunicacion=1; //Ya hay comunicacion
