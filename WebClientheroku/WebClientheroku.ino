@@ -57,27 +57,23 @@ int salida=0;//variable rele
 unsigned long lastConnectionTime = 0;             // last time you connected to the server, in milliseconds
 const unsigned long postingInterval = 10L * 1000L; // delay between updates, in milliseconds
 // 
-String mensaje="";
-bool recibido=true;
-
-struct tipo_automata{
- byte mac;
- int comunicacion;
- int entrada;
- int salida;
- int analogico;
- int envio=0;
-}automata;
+String mensaje;
+bool recibido;
+int contador;
 long tiempoUltimaLectura=0;
 float h,t;
+bool comando;//si recibe 'r' (rele) o 'a' (alarma)
+
+
 void setup() {
     pinMode(ledPin, OUTPUT);
     pinMode(buttonPin, INPUT);
     envio=String();
-    
+    mensaje=String();
     dht.begin(); //Se inicia el sensor
-    
-    
+    contador=0;
+    recibido=true;
+    comando=false;
   // Open serial communications and wait for port to open:
   Serial.begin(9600);
   // initialize the LED pin as an output:
@@ -113,39 +109,56 @@ void loop() {
   
   // check if the pushbutton is pressed. If it is, the buttonState is HIGH:
   if (buttonState == HIGH) {
-     digitalWrite(ledPin, HIGH);
         estado=1;
-        delay(1000);
-        Serial.print(estado);
-        } else {
-    // turn LED off:
-    digitalWrite(ledPin, LOW);
-  }
- 
+       Serial.println(" Alarma enviada desde arduino  " + ID);
+        delay(500);
+        
+        } 
   // if there are incoming bytes available
   // from the server, read them and print them:
   
   if (client.available()) {
-    char c = client.read();//Leer 1 carácter
-    mensaje=mensaje+c;
-     Serial.print(c);
-    }
-    
-  
+     char c = client.read();//Leer 1 carácter
+     if(contador<40){
+      if(c=='[' && recibido){
+          recibido=false;
+          contador ++;
+        }
+        if(contador>0){
+          Serial.print(c);
+          if(contador==28 && c=='r' && comando==false){
+             comando=true;
+          }
+          if(contador==32 && c=='0' && comando==true){
+             digitalWrite(ledPin,LOW);
+             salida=0;
+          }
+           if(contador==32 && c=='1' && comando==true){
+             digitalWrite(ledPin,HIGH);
+             salida=1;
+          }
+          contador ++;
+       }
+     }
+  }
+   
   // if ten seconds have passed since your last connection,
   // then connect again and send data:
  
   if (millis() - lastConnectionTime > postingInterval) {
     httpRequest();
     }
-}
+  }
+
 
 // this method makes a HTTP connection to the server:
 void httpRequest() {
   // close any connection before send a new request.
   // This will free the socket on the WiFi shield
   client.stop();
-
+   recibido=true;
+   contador=0;
+   comando=false;
   // if there's a successful connection:
   if (client.connect(server, 80)) {
     //Serial.println("connecting...");
