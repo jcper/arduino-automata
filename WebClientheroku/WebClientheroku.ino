@@ -1,12 +1,9 @@
 /*
   Web client
-
  This sketch connects to a website (http://www.google.com)
  using an Arduino Wiznet Ethernet shield.
-
  Circuit:
  * Ethernet shield attached to pins 10, 11, 12, 13
-
  created 18 Dec 2009
  by David A. Mellis
  modified 9 Apr 2012
@@ -17,17 +14,18 @@
 #include <SPI.h>
 #include <Ethernet.h>
 #include <string.h>
+#include <EEPROM.h>
 #include "DHT.h" 
 #define DHTPIN 2 
 #define DHTTYPE DHT11 
 DHT dht(DHTPIN, DHTTYPE); 
 // Enter a MAC address for your controller below.
 // Newer Ethernet shields have a MAC address printed on a sticker on the shield
-byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
+byte mac[6];
 // if you don't want to use DNS (and reduce your sketch size)
 // use the numeric IP instead of the name for the server:
 
-char server[] = "protected-anchorage-54868.herokuapp.com";    // name address for Google (using DNS)
+char server[50];    // name address for Google (using DNS)
 
 // Set the static IP address to use if the DHCP fails to assign
 IPAddress ip(192, 168, 0, 214);
@@ -48,26 +46,35 @@ String temperatura="&temp=";
 String humedad="&hum=";
 String final=" HTTP/1.1"; 
 String envio;
-String ID="DE:AD:BE:EF:FE:ED";//direccion del dispositivo
+String ID;//direccion del dispositivo
 // variables will change:
 int buttonState = 0;         // variable for reading the pushbutton status
 int estado= 0;
 int comunicacion=0;
-int salida=0;//variable rele
-unsigned long lastConnectionTime = 0;             // last time you connected to the server, in milliseconds
-const unsigned long postingInterval = 10L * 1000L; // delay between updates, in milliseconds
+int salida;//variable rele
+unsigned long lastConnectionTime = 0;// last time you connected to the server, in milliseconds
+long tiempo_polling;
+unsigned long postingInterval;  // delay between updates, in milliseconds
 // 
 String mensaje;
 bool recibido;
 int contador;
 long tiempoUltimaLectura=0;
+String urlserver;
 float h,t;
 bool comando;//si recibe 'r' (rele) o 'a' (alarma)
-
+struct MyStruct{
+  long tiempo;
+  byte mac[6];
+  char server[50];
+};
 
 void setup() {
     pinMode(ledPin, OUTPUT);
     pinMode(buttonPin, INPUT);
+    urlserver="";
+    int eeAddress=0;
+    salida=0;
     envio=String();
     mensaje=String();
     dht.begin(); //Se inicia el sensor
@@ -76,6 +83,33 @@ void setup() {
     comando=false;
   // Open serial communications and wait for port to open:
   Serial.begin(9600);
+   MyStruct customVar; //Variable to store custom object read from EEPROM.
+  EEPROM.get(eeAddress, customVar);
+
+  Serial.println("Read custom object from EEPROM: ");
+  Serial.println(customVar.tiempo);
+  Serial.println(customVar.server);
+  tiempo_polling=customVar.tiempo;
+  postingInterval= tiempo_polling * 1000L;
+  server[50]=customVar.server;
+  for(int i=0; i<50; i++){
+   server[i]=customVar.server[i];
+  };
+   for(byte j=0; j<6; j++){
+   mac[j]=customVar.mac[j];
+  Serial.print(mac[j],HEX);
+  };
+  char str[32] = "";
+  array_to_string(mac, 6, str);
+  Serial.println(str);
+  ID=str;
+
+  
+  Serial.println(ID);
+  Serial.println(server);
+  Serial.println(tiempo_polling);
+  
+  
   // initialize the LED pin as an output:
   pinMode(ledPin, OUTPUT);
   // initialize the pushbutton pin as an input:
@@ -99,7 +133,7 @@ void setup() {
 void loop() {
   // read the state of the pushbutton value:
   buttonState = digitalRead(buttonPin);
-
+ 
   if(millis()-tiempoUltimaLectura>2000){    
    h = dht.readHumidity(); //se lee la humedad
    t= dht.readTemperature(); // se lee la temperatura
@@ -179,3 +213,14 @@ void httpRequest() {
   }
 }
 
+void array_to_string(byte array[], unsigned int len, char buffer[])
+{
+    for (unsigned int i = 0; i < len; i++)
+    {
+        byte nib1 = (array[i] >> 4) & 0x0F;
+        byte nib2 = (array[i] >> 0) & 0x0F;
+        buffer[i*2+0] = nib1  < 0xA ? '0' + nib1  : 'A' + nib1  - 0xA;
+        buffer[i*2+1] = nib2  < 0xA ? '0' + nib2  : 'A' + nib2  - 0xA;
+    }
+    buffer[len*2] = '\0';
+}
