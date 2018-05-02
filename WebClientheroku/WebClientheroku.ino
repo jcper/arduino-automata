@@ -160,14 +160,16 @@ void loop() {
         }
         if(contador>0){
           Serial.print(c);
-          if(contador==28 && c=='r' && comando==false){
+          if(contador==23 && c=='r' && comando==false){
              comando=true;
+               Serial.print(c);
           }
-          if(contador==32 && c=='0' && comando==true){
+          if(contador==27 && c=='0' && comando==true){
              digitalWrite(ledPin,LOW);
+              Serial.print(c);
              salida=0;
           }
-           if(contador==32 && c=='1' && comando==true){
+           if(contador==27 && c=='1' && comando==true){
              digitalWrite(ledPin,HIGH);
              salida=1;
           }
