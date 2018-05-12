@@ -292,6 +292,7 @@ void httpRequest() {
   } else {
     // if you couldn't make a connection:
     Serial.println("connection failed");
+    comunicacion=0;
   }
 }
 
